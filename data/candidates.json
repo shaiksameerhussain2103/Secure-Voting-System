@@ -1,23 +1,26 @@
 [
-    {
-        "id": 1, 
-        "name": "Candidate A", 
-        "party": "Progressive Party",
-        "slogan": "Building a Better Tomorrow",
-        "description": "Experience in public service and community development"
-    },
-    {
-        "id": 2, 
-        "name": "Candidate B", 
-        "party": "Unity Alliance",
-        "slogan": "Together We Stand Strong",
-        "description": "Background in economics and environmental policy"
-    },
-    {
-        "id": 3, 
-        "name": "Candidate C", 
-        "party": "Future Forward",
-        "slogan": "Innovation for All",
-        "description": "Focus on education reform and technology innovation"
-    }
+  {
+    "id": 1,
+    "name": "Candidate A",
+    "party": "Progressive Party",
+    "bio": "Experience in public service and community development. Building a Better Tomorrow with proven leadership.",
+    "region_id": 1,
+    "image": null
+  },
+  {
+    "id": 2,
+    "name": "Candidate B",
+    "party": "Unity Alliance",
+    "bio": "Background in economics and environmental policy. Together We Stand Strong for sustainable development.",
+    "region_id": 2,
+    "image": null
+  },
+  {
+    "id": 3,
+    "name": "Candidate C",
+    "party": "Future Forward",
+    "bio": "Focus on education reform and technology innovation. Innovation for All through progressive policies.",
+    "region_id": 3,
+    "image": null
+  }
 ]

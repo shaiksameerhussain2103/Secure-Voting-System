@@ -30,13 +30,28 @@
                 {% for candidate in candidates %}
                 <div class="candidate-card" data-candidate-id="{{ candidate.id }}">
                     <div class="candidate-avatar">
-                        <i class="fas fa-user-tie"></i>
+                        {% if candidate.image %}
+                            <img src="{{ url_for('uploaded_file', filename=candidate.image) }}" 
+                                 alt="{{ candidate.name }}" 
+                                 class="candidate-photo">
+                        {% else %}
+                            <i class="fas fa-user-tie"></i>
+                        {% endif %}
                     </div>
                     <div class="candidate-info">
                         <h3>{{ candidate.name }}</h3>
                         <p class="party">{{ candidate.party }}</p>
-                        <p class="slogan">"{{ candidate.slogan }}"</p>
-                        <p class="description">{{ candidate.description }}</p>
+                        {% if candidate.region %}
+                            <p class="region">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ candidate.region }}
+                            </p>
+                        {% endif %}
+                        {% if candidate.bio %}
+                            <p class="description">{{ candidate.bio[:100] }}{% if candidate.bio|length > 100 %}...{% endif %}</p>
+                        {% else %}
+                            <p class="description">Committed to serving the people with integrity and dedication.</p>
+                        {% endif %}
                     </div>
                     <div class="candidate-actions">
                         <button class="btn btn-vote" onclick="selectCandidate({{ candidate.id }}, '{{ candidate.name }}')">

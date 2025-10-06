@@ -1,0 +1,459 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block title %}Manage Voters{% endblock %}
+
+{% block page_title %}Voter Management{% endblock %}
+{% block page_subtitle %}View registered voters and their voting status{% endblock %}
+
+{% block content %}
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Registered
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ users|length }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Voters Cast
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ users|selectattr('has_voted', 'equalto', true)|list|length }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stat-icon success">
+                            <i class="fas fa-vote-yea"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Not Voted
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ users|selectattr('has_voted', 'equalto', false)|list|length }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Turnout Rate
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% if users|length > 0 %}
+                                {{ "%.1f"|format((users|selectattr('has_voted', 'equalto', true)|list|length / users|length * 100)) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stat-icon info">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Actions -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="page-title mb-0">
+                    <i class="fas fa-user-check me-2"></i>
+                    Registered Voters ({{ users|length }})
+                </h5>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-end">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary" onclick="filterVoters('all')">
+                            <i class="fas fa-users me-2"></i>All
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="filterVoters('voted')">
+                            <i class="fas fa-check me-2"></i>Voted
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="filterVoters('not-voted')">
+                            <i class="fas fa-clock me-2"></i>Not Voted
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voters Table -->
+<div class="card table-admin">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-list me-2"></i>
+            Voter Details
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="votersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Voting Status</th>
+                            <th>Registration Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr class="voter-row" data-status="{{ 'voted' if user.has_voted else 'not-voted' }}">
+                                <td>
+                                    <strong>#{{ user.id }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" 
+                                                 style="width: 40px; height: 40px;">
+                                                {{ user.full_name[0]|upper if user.full_name else user.username[0]|upper }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.full_name or 'Not provided' }}</strong>
+                                            {% if user.has_voted %}
+                                                <br><small class="text-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Vote recorded
+                                                </small>
+                                            {% else %}
+                                                <br><small class="text-warning">
+                                                    <i class="fas fa-clock me-1"></i>Awaiting vote
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ user.username }}</span>
+                                </td>
+                                <td>
+                                    {% if user.has_voted %}
+                                        <span class="status-badge status-voted">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Voted
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-not-voted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Not Voted
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% if user.registration_date %}
+                                            {{ user.registration_date[:19]|replace('T', ' ') }}
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" 
+                                                class="btn btn-outline-info btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#voterDetailsModal"
+                                                onclick="showVoterDetails({{ user|tojson }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if user.has_voted %}
+                                            <button type="button" 
+                                                    class="btn btn-outline-success btn-sm" 
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Voter has already cast their ballot">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="button" 
+                                                    class="btn btn-outline-warning btn-sm" 
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Voter has not voted yet">
+                                                <i class="fas fa-exclamation"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination (if needed in future) -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                    <small class="text-muted">
+                        Showing {{ users|length }} voter(s)
+                    </small>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-user-times fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Voters Registered</h5>
+                <p class="text-muted">Voters can register through the main voting portal.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-2"></i>
+                    Go to Voting Portal
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Voter Details Modal -->
+<div class="modal fade" id="voterDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Voter Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="voterDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voting Progress Chart -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Voting Progress
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="votingProgressChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Voter Activity
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set recent_voters = users|selectattr('has_voted', 'equalto', true)|list %}
+                {% if recent_voters %}
+                    <div class="list-group list-group-flush">
+                        {% for voter in recent_voters[:5] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                <div>
+                                    <strong>{{ voter.full_name or voter.username }}</strong>
+                                    <br>
+                                    <small class="text-muted">Cast their vote</small>
+                                </div>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if recent_voters|length > 5 %}
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                And {{ recent_voters|length - 5 }} more voters...
+                            </small>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-clock fa-2x mb-2"></i>
+                        <br>No votes cast yet
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filter voters function
+function filterVoters(status) {
+    const rows = document.querySelectorAll('.voter-row');
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    
+    // Update button states
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Filter rows
+    rows.forEach(row => {
+        const rowStatus = row.getAttribute('data-status');
+        if (status === 'all' || status === rowStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Show voter details in modal
+function showVoterDetails(voter) {
+    const content = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-muted">Personal Information</h6>
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>User ID:</strong></td>
+                        <td>#${voter.id}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Username:</strong></td>
+                        <td>${voter.username}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Full Name:</strong></td>
+                        <td>${voter.full_name || 'Not provided'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Registration:</strong></td>
+                        <td>${voter.registration_date ? voter.registration_date.replace('T', ' ').substring(0, 19) : 'Not available'}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-muted">Voting Status</h6>
+                <div class="text-center mb-3">
+                    ${voter.has_voted ? 
+                        '<div class="text-success"><i class="fas fa-check-circle fa-4x mb-2"></i><br><strong>Vote Cast</strong><br><small>This voter has successfully cast their ballot</small></div>' :
+                        '<div class="text-warning"><i class="fas fa-clock fa-4x mb-2"></i><br><strong>Awaiting Vote</strong><br><small>This voter has not yet cast their ballot</small></div>'
+                    }
+                </div>
+                
+                <div class="alert ${voter.has_voted ? 'alert-success' : 'alert-warning'} text-center">
+                    <small>
+                        ${voter.has_voted ? 
+                            '<i class="fas fa-shield-alt me-2"></i>Vote encrypted and stored securely' :
+                            '<i class="fas fa-info-circle me-2"></i>Voter can cast ballot at any time'
+                        }
+                    </small>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('voterDetailsContent').innerHTML = content;
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Create voting progress chart
+    const ctx = document.getElementById('votingProgressChart').getContext('2d');
+    const votedCount = {{ users|selectattr('has_voted', 'equalto', true)|list|length }};
+    const notVotedCount = {{ users|selectattr('has_voted', 'equalto', false)|list|length }};
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Voted', 'Not Voted'],
+            datasets: [{
+                data: [votedCount, notVotedCount],
+                backgroundColor: [
+                    '#28a745',
+                    '#ffc107'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+
+// Auto-refresh every 30 seconds for live updates
+setTimeout(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

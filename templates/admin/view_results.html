@@ -1,0 +1,399 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block title %}Election Results{% endblock %}
+
+{% block page_title %}Election Results{% endblock %}
+{% block page_subtitle %}Live vote counts and election analytics{% endblock %}
+
+{% block content %}
+<!-- Election Status Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        {% if election_status.winner_declared %}
+            <div class="alert alert-success alert-custom">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">
+                            <i class="fas fa-trophy me-2"></i>
+                            Election Completed - Winner Declared!
+                        </h5>
+                        <p class="mb-0">
+                            The election has concluded and the winner has been officially declared.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Final Results
+                        </span>
+                    </div>
+                </div>
+            </div>
+        {% elif total_votes > 0 %}
+            <div class="alert alert-info alert-custom">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Live Election Results
+                        </h5>
+                        <p class="mb-0">
+                            Results are updated in real-time as votes are cast. {{ total_votes }} vote(s) recorded.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if not election_status.winner_declared %}
+                            <a href="{{ url_for('declare_winner') }}" 
+                               class="btn btn-warning"
+                               onclick="return confirm('Are you sure you want to declare the election winner? This action cannot be undone.')">
+                                <i class="fas fa-trophy me-2"></i>
+                                Declare Winner
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning alert-custom">
+                <div class="row align-items-center">
+                    <div class="col-12 text-center">
+                        <h5 class="mb-1">
+                            <i class="fas fa-clock me-2"></i>
+                            No Votes Cast Yet
+                        </h5>
+                        <p class="mb-0">
+                            Results will appear here once voters start casting their ballots.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if total_votes > 0 %}
+<!-- Overall Results Summary -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Overall Election Results
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="overallResultsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-trophy me-2"></i>
+                    Leading Candidate
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                {% if results_data %}
+                    {% set leader = results_data[0] %}
+                    <div class="mb-3">
+                        {% if leader.candidate.image %}
+                            <img src="{{ url_for('uploaded_file', filename=leader.candidate.image) }}" 
+                                 alt="{{ leader.candidate.name }}" 
+                                 class="rounded-circle mb-3"
+                                 style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center text-white" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-user fa-2x"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h5 class="mb-1">{{ leader.candidate.name }}</h5>
+                    <p class="text-muted mb-2">{{ leader.candidate.party }}</p>
+                    <p class="text-muted mb-3">{{ leader.region.name }}</p>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary mb-0">{{ leader.vote_count }}</h4>
+                            <small class="text-muted">Votes</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-0">{{ "%.1f"|format(leader.percentage) }}%</h4>
+                            <small class="text-muted">Share</small>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Results Table -->
+<div class="card table-admin mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-list-ol me-2"></i>
+            Detailed Results ({{ total_votes }} total votes)
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Candidate</th>
+                        <th>Party</th>
+                        <th>Region</th>
+                        <th>Votes</th>
+                        <th>Percentage</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results_data %}
+                        <tr {% if loop.first %}class="table-success"{% endif %}>
+                            <td>
+                                <strong class="fs-5">
+                                    {% if loop.first %}
+                                        <i class="fas fa-trophy text-warning me-2"></i>
+                                    {% endif %}
+                                    #{{ loop.index }}
+                                </strong>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if result.candidate.image %}
+                                        <img src="{{ url_for('uploaded_file', filename=result.candidate.image) }}" 
+                                             alt="{{ result.candidate.name }}" 
+                                             class="candidate-image me-3">
+                                    {% else %}
+                                        <div class="candidate-image bg-light d-flex align-items-center justify-content-center me-3">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ result.candidate.name }}</strong>
+                                        {% if result.candidate.bio %}
+                                            <br><small class="text-muted">{{ result.candidate.bio[:50] }}...</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ result.candidate.party }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ result.region.name }}</span>
+                            </td>
+                            <td>
+                                <h5 class="mb-0">{{ result.vote_count }}</h5>
+                            </td>
+                            <td>
+                                <strong>{{ "%.1f"|format(result.percentage) }}%</strong>
+                            </td>
+                            <td style="width: 200px;">
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {% if loop.first %}bg-success{% else %}bg-info{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ result.percentage }}%" 
+                                         aria-valuenow="{{ result.percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ "%.1f"|format(result.percentage) }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Regional Breakdown -->
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Regional Breakdown
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="regionalChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-map me-2"></i>
+                    Regional Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for region_id, regional_result in regional_results.items() %}
+                    <div class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <h6 class="mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            {{ regional_result.region.name }}
+                        </h6>
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Total Votes:</small>
+                            <strong>{{ regional_result.total_votes }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <small>Candidates:</small>
+                            <strong>{{ regional_result.candidate_votes|length }}</strong>
+                        </div>
+                        
+                        {% if regional_result.total_votes > 0 %}
+                            {% set leading_candidate_id = regional_result.candidate_votes.keys()|list|first if regional_result.candidate_votes.values()|list else none %}
+                            {% if leading_candidate_id %}
+                                {% set leading_candidate = results_data|selectattr('candidate.id', 'equalto', leading_candidate_id)|first %}
+                                {% if leading_candidate %}
+                                    <div class="text-success">
+                                        <small>Leading:</small><br>
+                                        <strong>{{ leading_candidate.candidate.name }}</strong>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <small class="text-muted">No votes yet</small>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">Election Management Actions</h6>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ url_for('manage_candidates') }}" class="btn btn-outline-info">
+                        <i class="fas fa-users me-2"></i>
+                        Manage Candidates
+                    </a>
+                    <a href="{{ url_for('manage_voters') }}" class="btn btn-outline-success">
+                        <i class="fas fa-user-check me-2"></i>
+                        View Voters
+                    </a>
+                    {% if not election_status.winner_declared and total_votes > 0 %}
+                        <a href="{{ url_for('declare_winner') }}" 
+                           class="btn btn-warning"
+                           onclick="return confirm('Are you sure you want to declare the election winner? This will end the election and cannot be undone.')">
+                            <i class="fas fa-trophy me-2"></i>
+                            Declare Winner
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if total_votes > 0 %}
+        // Overall Results Pie Chart
+        const overallCtx = document.getElementById('overallResultsChart').getContext('2d');
+        
+        const candidateNames = [{% for result in results_data %}'{{ result.candidate.name }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+        const voteCounts = [{% for result in results_data %}{{ result.vote_count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+        const colors = [
+            '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
+            '#ffecd2', '#fcb69f', '#a8edea', '#fed6e3', '#d299c2', '#fef9d7'
+        ];
+        
+        new Chart(overallCtx, {
+            type: 'doughnut',
+            data: {
+                labels: candidateNames,
+                datasets: [{
+                    data: voteCounts,
+                    backgroundColor: colors.slice(0, candidateNames.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+        
+        // Regional Breakdown Chart
+        const regionalCtx = document.getElementById('regionalChart').getContext('2d');
+        
+        // Prepare regional data
+        const regionNames = [];
+        const regionVoteCounts = [];
+        
+        {% for region_id, regional_result in regional_results.items() %}
+            regionNames.push('{{ regional_result.region.name }}');
+            regionVoteCounts.push({{ regional_result.total_votes }});
+        {% endfor %}
+        
+        new Chart(regionalCtx, {
+            type: 'bar',
+            data: {
+                labels: regionNames,
+                datasets: [{
+                    label: 'Votes by Region',
+                    data: regionVoteCounts,
+                    backgroundColor: '#667eea',
+                    borderColor: '#764ba2',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    {% endif %}
+    
+    // Auto-refresh every 30 seconds for live results (only if election is active)
+    {% if not election_status.winner_declared %}
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    {% endif %}
+});
+</script>
+{% endblock %}

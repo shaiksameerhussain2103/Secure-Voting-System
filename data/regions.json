@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "name": "North Region",
+    "description": "Northern constituency covering upper districts"
+  },
+  {
+    "id": 2,
+    "name": "South Region",
+    "description": "Southern constituency covering lower districts"
+  },
+  {
+    "id": 3,
+    "name": "East Region",
+    "description": "Eastern constituency covering coastal areas"
+  },
+  {
+    "id": 4,
+    "name": "West Region",
+    "description": "Western constituency covering industrial areas"
+  },
+  {
+    "id": 5,
+    "name": "HYD",
+    "description": "Good"
+  }
+]
