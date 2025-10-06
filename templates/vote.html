@@ -1,0 +1,251 @@
+{% extends "layout.html" %}
+
+{% block title %}Vote - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="voting-container">
+    {% if already_voted %}
+        <div class="voted-message">
+            <i class="fas fa-check-circle"></i>
+            <h1>Thank You for Voting!</h1>
+            <p>You have already cast your vote in this election. Each voter is allowed only one vote to ensure election integrity.</p>
+            <div class="vote-confirmation">
+                <i class="fas fa-shield-alt"></i>
+                <span>Your vote has been securely encrypted and stored</span>
+            </div>
+        </div>
+    {% else %}
+        <div class="voting-header">
+            <h1>Cast Your Vote</h1>
+            <p>Select your preferred candidate below. Your vote will be encrypted using RSA encryption before submission.</p>
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                <span>256-bit RSA Encrypted</span>
+            </div>
+        </div>
+        
+        <div class="candidates-section">
+            <h2>Candidates</h2>
+            <div class="candidates-grid">
+                {% for candidate in candidates %}
+                <div class="candidate-card" data-candidate-id="{{ candidate.id }}">
+                    <div class="candidate-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="candidate-info">
+                        <h3>{{ candidate.name }}</h3>
+                        <p class="party">{{ candidate.party }}</p>
+                        <p class="slogan">"{{ candidate.slogan }}"</p>
+                        <p class="description">{{ candidate.description }}</p>
+                    </div>
+                    <div class="candidate-actions">
+                        <button class="btn btn-vote" onclick="selectCandidate({{ candidate.id }}, '{{ candidate.name }}')">
+                            <i class="fas fa-vote-yea"></i>
+                            Vote
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Vote Confirmation Modal -->
+<div id="voteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Your Vote</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="confirmation-message">
+                <i class="fas fa-vote-yea"></i>
+                <p>You are about to vote for:</p>
+                <h3 id="selectedCandidate"></h3>
+                <div class="warning-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>This action cannot be undone. You can only vote once.</p>
+                </div>
+            </div>
+            <div class="encryption-info">
+                <i class="fas fa-shield-alt"></i>
+                <p>Your vote will be encrypted with RSA encryption before submission.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitVote()" id="confirmVoteBtn">
+                <i class="fas fa-check"></i>
+                Confirm Vote
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p>Encrypting and submitting your vote...</p>
+        <p class="loading-details">Please wait while we secure your vote</p>
+    </div>
+</div>
+
+<script>
+// Global variables
+let publicKey = null;
+let selectedCandidateId = null;
+let selectedCandidateName = null;
+
+// Load public key when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Vote page loaded, fetching public key...');
+    loadPublicKey();
+});
+
+async function loadPublicKey() {
+    try {
+        console.log('Attempting to load public key...');
+        const response = await fetch('/get_public_key');
+        console.log('Public key response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Public key response data:', data);
+        
+        if (data.public_key) {
+            publicKey = data.public_key;
+            console.log('Public key loaded successfully');
+        } else {
+            console.error('Failed to load public key:', data.error);
+            alert('Failed to load encryption key. Please refresh the page.');
+        }
+    } catch (error) {
+        console.error('Error loading public key:', error);
+        alert('Error loading encryption key. Please refresh the page.');
+    }
+}
+
+function selectCandidate(candidateId, candidateName) {
+    console.log('Candidate selected:', candidateId, candidateName);
+    selectedCandidateId = candidateId;
+    selectedCandidateName = candidateName;
+    
+    document.getElementById('selectedCandidate').textContent = candidateName;
+    document.getElementById('voteModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('voteModal').style.display = 'none';
+}
+
+async function submitVote() {
+    console.log('Submit vote called...');
+    
+    if (!selectedCandidateId || !publicKey) {
+        console.error('Missing vote data or encryption key');
+        alert('Error: Missing vote data or encryption key');
+        return;
+    }
+    
+    // Show loading overlay
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    try {
+        console.log('Encrypting vote for candidate:', selectedCandidateId);
+        
+        // Encrypt the vote
+        const encryptedVote = await encryptVote(selectedCandidateId.toString());
+        console.log('Vote encrypted successfully');
+        
+        // Submit the encrypted vote
+        console.log('Submitting encrypted vote...');
+        const response = await fetch('/submit_vote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                encrypted_vote: encryptedVote
+            })
+        });
+        
+        console.log('Submit vote response status:', response.status);
+        const result = await response.json();
+        console.log('Submit vote result:', result);
+        
+        // Hide loading overlay
+        document.getElementById('loadingOverlay').style.display = 'none';
+        
+        if (result.success) {
+            alert('Vote submitted successfully!');
+            location.reload(); // Refresh page to show "already voted" message
+        } else {
+            alert('Error: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('Error submitting vote:', error);
+        document.getElementById('loadingOverlay').style.display = 'none';
+        alert('Error submitting vote. Please try again.');
+    }
+    
+    closeModal();
+}
+
+async function encryptVote(voteData) {
+    try {
+        console.log('Starting vote encryption...');
+        
+        // Import the public key
+        const keyData = publicKey.replace('-----BEGIN PUBLIC KEY-----', '')
+                                .replace('-----END PUBLIC KEY-----', '')
+                                .replace(/\s/g, '');
+        
+        const binaryDer = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+        
+        const key = await window.crypto.subtle.importKey(
+            'spki',
+            binaryDer,
+            {
+                name: 'RSA-OAEP',
+                hash: 'SHA-256',
+            },
+            false,
+            ['encrypt']
+        );
+        
+        console.log('RSA key imported successfully');
+        
+        // Encrypt the vote data
+        const encodedData = new TextEncoder().encode(voteData);
+        const encryptedBuffer = await window.crypto.subtle.encrypt(
+            {
+                name: 'RSA-OAEP'
+            },
+            key,
+            encodedData
+        );
+        
+        // Convert to base64
+        const encryptedArray = new Uint8Array(encryptedBuffer);
+        const base64String = btoa(String.fromCharCode(...encryptedArray));
+        
+        console.log('Vote encryption completed');
+        return base64String;
+        
+    } catch (error) {
+        console.error('Encryption error:', error);
+        throw new Error('Failed to encrypt vote');
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('voteModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

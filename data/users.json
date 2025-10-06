@@ -1,0 +1,20 @@
+{
+  "admin": {
+    "password": "admin123",
+    "role": "admin",
+    "name": "Administrator"
+  },
+  "sameer": {
+    "password": "sameer",
+    "role": "voter",
+    "name": "Shaik Sameer Hussain",
+    "registered_at": "2025-10-06T22:19:31.864412"
+  },
+  "sameer1": {
+    "password": "b30dfe3a359c4dfbd77bc1baf9b28c6e7ba822da313b96e6593f52ea5184c001",
+    "role": "voter",
+    "name": "Shaik Sameer Hussain",
+    "registered_at": "2025-10-06T22:37:52.183026",
+    "has_voted": false
+  }
+}

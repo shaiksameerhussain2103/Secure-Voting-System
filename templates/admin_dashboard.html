@@ -1,0 +1,219 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <h1>
+            <i class="fas fa-chart-bar"></i>
+            Election Results Dashboard
+        </h1>
+        <p>Real-time decrypted election results and statistics</p>
+    </div>
+    
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-vote-yea"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_votes }}</h3>
+                <p>Total Votes Cast</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ valid_votes }}</h3>
+                <p>Valid Votes</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ invalid_votes }}</h3>
+                <p>Invalid Votes</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{% if total_votes > 0 %}{{ "%.1f"|format((valid_votes / total_votes) * 100) }}%{% else %}0%{% endif %}</h3>
+                <p>Success Rate</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if valid_votes > 0 %}
+    <div class="results-section">
+        <h2>
+            <i class="fas fa-trophy"></i>
+            Election Results
+        </h2>
+        
+        <div class="results-table-container">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Candidate</th>
+                        <th>Party</th>
+                        <th>Votes</th>
+                        <th>Percentage</th>
+                        <th>Vote Bar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set sorted_results = results.items() | list | sort(attribute=1, reverse=true) %}
+                    {% for candidate_name, vote_count in sorted_results %}
+                        {% set candidate_info = candidates | selectattr('name', 'equalto', candidate_name) | first %}
+                        {% set percentage = (vote_count / valid_votes * 100) if valid_votes > 0 else 0 %}
+                        <tr class="{% if loop.index == 1 %}winner{% endif %}">
+                            <td class="rank">
+                                {% if loop.index == 1 %}
+                                    <i class="fas fa-crown"></i>
+                                {% endif %}
+                                {{ loop.index }}
+                            </td>
+                            <td class="candidate-name">
+                                <div class="candidate-info">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>{{ candidate_name }}</span>
+                                </div>
+                            </td>
+                            <td class="party">
+                                {% if candidate_info %}
+                                    {{ candidate_info.party }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+                            <td class="vote-count">{{ vote_count }}</td>
+                            <td class="percentage">{{ "%.1f"|format(percentage) }}%</td>
+                            <td class="vote-bar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ percentage }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="chart-section">
+        <h2>
+            <i class="fas fa-chart-pie"></i>
+            Visual Results
+        </h2>
+        <div class="chart-container">
+            <canvas id="resultsChart"></canvas>
+        </div>
+    </div>
+    {% else %}
+    <div class="no-results">
+        <i class="fas fa-ballot-check"></i>
+        <h2>No Valid Votes Yet</h2>
+        <p>No valid votes have been cast yet. Results will appear here once voting begins.</p>
+    </div>
+    {% endif %}
+    
+    <div class="security-info">
+        <h2>
+            <i class="fas fa-shield-alt"></i>
+            Security Information
+        </h2>
+        <div class="security-cards">
+            <div class="security-card">
+                <i class="fas fa-lock"></i>
+                <h3>RSA Decryption</h3>
+                <p>All votes are decrypted using 2048-bit RSA private key</p>
+            </div>
+            <div class="security-card">
+                <i class="fas fa-eye-slash"></i>
+                <h3>Anonymous Voting</h3>
+                <p>Voter identities are not linked to their vote choices</p>
+            </div>
+            <div class="security-card">
+                <i class="fas fa-database"></i>
+                <h3>Secure Storage</h3>
+                <p>All votes are stored in encrypted format in the database</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if valid_votes > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Prepare data for chart
+const chartData = {
+    labels: [
+        {% for candidate_name, vote_count in results.items() %}
+        '{{ candidate_name }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        data: [
+            {% for candidate_name, vote_count in results.items() %}
+            {{ vote_count }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: [
+            '#3B82F6',
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#8B5CF6',
+            '#F97316'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 3
+    }]
+};
+
+// Create chart
+const ctx = document.getElementById('resultsChart').getContext('2d');
+const resultsChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: chartData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((context.parsed * 100) / total).toFixed(1);
+                        return context.label + ': ' + context.parsed + ' votes (' + percentage + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

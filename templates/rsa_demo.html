@@ -1,0 +1,247 @@
+{% extends "layout.html" %}
+
+{% block title %}RSA Encryption Demo - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="rsa-demo-container">
+    <!-- Header Section -->
+    <div class="demo-header">
+        <div class="demo-title">
+            <i class="fas fa-shield-alt demo-icon"></i>
+            <h1>How RSA Secures Your Vote — Interactive Demo</h1>
+            <p class="demo-subtitle">Experience firsthand how our voting system uses RSA encryption to protect your ballot</p>
+        </div>
+        <div class="security-metrics">
+            <div class="metric">
+                <i class="fas fa-key"></i>
+                <span class="metric-value">2048-bit</span>
+                <span class="metric-label">RSA Key Size</span>
+            </div>
+            <div class="metric">
+                <i class="fas fa-lock"></i>
+                <span class="metric-value">SHA-256</span>
+                <span class="metric-label">Hash Algorithm</span>
+            </div>
+            <div class="metric">
+                <i class="fas fa-certificate"></i>
+                <span class="metric-value">OAEP</span>
+                <span class="metric-label">Padding Scheme</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Concept Visualization Section -->
+    <div class="demo-section concept-section">
+        <h2><i class="fas fa-sitemap"></i> RSA Encryption Process Flow</h2>
+        <div class="rsa-flowchart">
+            <div class="flow-step" id="step1">
+                <div class="step-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="step-content">
+                    <h3>1. Your Vote</h3>
+                    <p>Plaintext message<br>"Vote for Candidate A"</p>
+                </div>
+            </div>
+            
+            <div class="flow-arrow">
+                <i class="fas fa-arrow-right"></i>
+                <span>Public Key</span>
+            </div>
+            
+            <div class="flow-step" id="step2">
+                <div class="step-icon encryption">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="step-content">
+                    <h3>2. Encryption</h3>
+                    <p>RSA algorithm transforms<br>vote into ciphertext</p>
+                </div>
+            </div>
+            
+            <div class="flow-arrow">
+                <i class="fas fa-arrow-right"></i>
+                <span>Secure Storage</span>
+            </div>
+            
+            <div class="flow-step" id="step3">
+                <div class="step-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="step-content">
+                    <h3>3. Encrypted Vote</h3>
+                    <p>Unreadable ciphertext<br>stored securely</p>
+                </div>
+            </div>
+            
+            <div class="flow-arrow">
+                <i class="fas fa-arrow-right"></i>
+                <span>Private Key</span>
+            </div>
+            
+            <div class="flow-step" id="step4">
+                <div class="step-icon decryption">
+                    <i class="fas fa-unlock"></i>
+                </div>
+                <div class="step-content">
+                    <h3>4. Admin Decryption</h3>
+                    <p>Only admin can decrypt<br>and count votes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Demo Section -->
+    <div class="demo-section live-demo-section">
+        <h2><i class="fas fa-play-circle"></i> Interactive RSA Demo</h2>
+        <div class="demo-controls">
+            <div class="input-section">
+                <label for="demoMessage">
+                    <i class="fas fa-keyboard"></i>
+                    Enter your message to encrypt:
+                </label>
+                <textarea 
+                    id="demoMessage" 
+                    placeholder="Vote for Candidate A" 
+                    maxlength="100"
+                    rows="3">Vote for Candidate A</textarea>
+                <div class="demo-buttons">
+                    <button id="encryptBtn" class="btn btn-encrypt">
+                        <i class="fas fa-lock"></i>
+                        Encrypt with Public Key
+                    </button>
+                    <button id="decryptBtn" class="btn btn-decrypt" disabled>
+                        <i class="fas fa-unlock"></i>
+                        Decrypt with Private Key
+                    </button>
+                    <button id="runSimulationBtn" class="btn btn-simulation">
+                        <i class="fas fa-magic"></i>
+                        Run Demo Simulation
+                    </button>
+                </div>
+            </div>
+            
+            <div class="output-section">
+                <div class="output-box">
+                    <label>
+                        <i class="fas fa-file-alt"></i>
+                        Original Message:
+                    </label>
+                    <div id="originalText" class="output-display">Ready for encryption...</div>
+                </div>
+                
+                <div class="output-box">
+                    <label>
+                        <i class="fas fa-shield-alt"></i>
+                        Encrypted Text (Base64):
+                    </label>
+                    <div id="encryptedText" class="output-display encrypted">Encryption result will appear here...</div>
+                </div>
+                
+                <div class="output-box">
+                    <label>
+                        <i class="fas fa-check-circle"></i>
+                        Decrypted Text:
+                    </label>
+                    <div id="decryptedText" class="output-display decrypted">Decryption result will appear here...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div id="progressIndicator" class="progress-indicator" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="progress-text">Processing...</div>
+        </div>
+    </div>
+
+    <!-- Educational Information Section -->
+    <div class="demo-section educational-section">
+        <h2><i class="fas fa-graduation-cap"></i> Why RSA Makes Voting Secure</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h3>Two-Key System</h3>
+                <p>RSA uses a pair of mathematically related keys. The public key encrypts votes, while only the private key can decrypt them.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-eye-slash"></i>
+                </div>
+                <h3>Vote Privacy</h3>
+                <p>Your votes are encrypted before storage. Even system administrators cannot see individual votes without the private key.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-shield-virus"></i>
+                </div>
+                <h3>Tamper-Proof</h3>
+                <p>Any attempt to modify encrypted votes would result in corrupted data that cannot be properly decrypted.</p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-key"></i>
+                </div>
+                <h3>Key Control</h3>
+                <p>Only authorized election administrators possess the private key, ensuring secure and controlled vote counting.</p>
+            </div>
+        </div>
+        
+        <!-- Comparison Table -->
+        <div class="comparison-table">
+            <h3>Security Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th class="insecure">Normal System</th>
+                        <th class="secure">RSA-based System</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Vote Visibility</td>
+                        <td class="insecure">Votes visible in database</td>
+                        <td class="secure">Votes encrypted and unreadable</td>
+                    </tr>
+                    <tr>
+                        <td>Tampering Risk</td>
+                        <td class="insecure">High - easy to modify</td>
+                        <td class="secure">Nearly impossible</td>
+                    </tr>
+                    <tr>
+                        <td>Key Control</td>
+                        <td class="insecure">No encryption keys</td>
+                        <td class="secure">Private key with admin only</td>
+                    </tr>
+                    <tr>
+                        <td>Data Security</td>
+                        <td class="insecure">Low protection</td>
+                        <td class="secure">Cryptographically strong</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Success Toast -->
+<div id="successToast" class="toast" style="display: none;">
+    <div class="toast-content">
+        <i class="fas fa-check-circle"></i>
+        <span>RSA encryption and decryption successful — your vote is safe!</span>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/rsa_demo.js') }}"></script>
+{% endblock %}

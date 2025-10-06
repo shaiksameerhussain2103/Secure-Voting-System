@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block title %}Register - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-user-plus auth-icon"></i>
+            <h1>Create Your Account</h1>
+            <p>Register to participate in secure, encrypted voting</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+            <div class="form-group">
+                <label for="full_name">
+                    <i class="fas fa-id-card"></i>
+                    Full Name
+                </label>
+                <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
+            </div>
+            
+            <div class="form-group">
+                <label for="username">
+                    <i class="fas fa-user"></i>
+                    Username
+                </label>
+                <input type="text" id="username" name="username" required placeholder="Choose a username">
+                <small class="help-text">Choose a unique username for your account</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-lock"></i>
+                    Password
+                </label>
+                <input type="password" id="password" name="password" required placeholder="Create a secure password" minlength="6">
+                <small class="help-text">Password must be at least 6 characters long</small>
+            </div>
+            
+            <div class="security-notice">
+                <i class="fas fa-info-circle"></i>
+                <p>Your registration is secure and your voting data will be encrypted with RSA encryption.</p>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i>
+                Create Account
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('index') }}">Login here</a></p>
+        </div>
+    </div>
+    
+    <div class="registration-info">
+        <h2>Voting Process</h2>
+        <div class="process-steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Register</h3>
+                    <p>Create your secure account with unique credentials</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Login</h3>
+                    <p>Access the voting system with your credentials</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Vote</h3>
+                    <p>Cast your encrypted vote for your preferred candidate</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Secure</h3>
+                    <p>Your vote is encrypted and stored securely</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1, 
+        "name": "Candidate A", 
+        "party": "Progressive Party",
+        "slogan": "Building a Better Tomorrow",
+        "description": "Experience in public service and community development"
+    },
+    {
+        "id": 2, 
+        "name": "Candidate B", 
+        "party": "Unity Alliance",
+        "slogan": "Together We Stand Strong",
+        "description": "Background in economics and environmental policy"
+    },
+    {
+        "id": 3, 
+        "name": "Candidate C", 
+        "party": "Future Forward",
+        "slogan": "Innovation for All",
+        "description": "Focus on education reform and technology innovation"
+    }
+]

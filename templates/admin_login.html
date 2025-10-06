@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Login - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card admin-login">
+        <div class="auth-header">
+            <i class="fas fa-cog auth-icon admin-icon"></i>
+            <h1>Administrator Login</h1>
+            <p>Secure access to election management and results</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('admin_login') }}" class="auth-form">
+            <div class="form-group">
+                <label for="username">
+                    <i class="fas fa-user-shield"></i>
+                    Admin Username
+                </label>
+                <input type="text" id="username" name="username" required placeholder="Enter admin username" value="admin_user">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-key"></i>
+                    Admin Password
+                </label>
+                <input type="password" id="password" name="password" required placeholder="Enter admin password">
+            </div>
+            
+            <div class="admin-notice">
+                <i class="fas fa-shield-alt"></i>
+                <p>Admin access provides ability to decrypt and view all election results.</p>
+            </div>
+            
+            <button type="submit" class="btn btn-admin">
+                <i class="fas fa-sign-in-alt"></i>
+                Admin Login
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p><a href="{{ url_for('index') }}">← Back to Voter Login</a></p>
+            <div class="default-credentials">
+                <h4>Default Credentials:</h4>
+                <p><strong>Username:</strong> admin</p>
+                <p><strong>Password:</strong> admin123</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-features">
+        <h2>Administrator Capabilities</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-unlock"></i>
+                <h3>Vote Decryption</h3>
+                <p>Decrypt votes using the RSA private key to view election results.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-pie"></i>
+                <h3>Results Analysis</h3>
+                <p>View comprehensive election statistics and vote counts.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-database"></i>
+                <h3>Data Management</h3>
+                <p>Access secure election data and vote records.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-security"></i>
+                <h3>Security Monitoring</h3>
+                <p>Monitor system integrity and security measures.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
